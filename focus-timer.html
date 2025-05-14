@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>مؤقت التركيز - ELYA Tools</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1a0f0a;
+      color: #ff6600;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    #timer {
+      font-size: 48px;
+      margin: 20px;
+    }
+    button {
+      background-color: #ff6600;
+      color: #1a0f0a;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 18px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>مؤقت التركيز</h1>
+  <div id="timer">25:00</div>
+  <button onclick="startTimer()">ابدأ</button>
+  <button onclick="resetTimer()">إعادة</button>
+
+  <script>
+    let duration = 25 * 60;
+    let remaining = duration;
+    let interval;
+
+    function updateDisplay() {
+      const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
+      const seconds = (remaining % 60).toString().padStart(2, '0');
+      document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+    }
+
+    function startTimer() {
+      if (interval) return;
+      interval = setInterval(() => {
+        if (remaining > 0) {
+          remaining--;
+          updateDisplay();
+        } else {
+          clearInterval(interval);
+          interval = null;
+          alert("انتهى الوقت!");
+        }
+      }, 1000);
+    }
+
+    function resetTimer() {
+      clearInterval(interval);
+      interval = null;
+      remaining = duration;
+      updateDisplay();
+    }
+
+    updateDisplay();
+  </script>
+</body>
+</html>
