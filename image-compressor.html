@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>ضغط الصور</title>
+</head>
+<body>
+  <h1>ضغط الصور</h1>
+  <input type="file" id="imageInput" />
+  <button onclick="compressImage()">ضغط الصورة</button>
+  <img id="outputImage" style="max-width: 100%;" />
+  <script>
+    function compressImage() {
+      const file = document.getElementById('imageInput').files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const img = new Image();
+          img.src = reader.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const maxWidth = 800;
+            const scaleFactor = maxWidth / img.width;
+            canvas.width = maxWidth;
+            canvas.height = img.height * scaleFactor;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(function(blob) {
+              const url = URL.createObjectURL(blob);
+              document.getElementById('outputImage').src = url;
+            }, 'image/jpeg', 0.5);
+          };
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+  </script>
+</body>
+</html>
