@@ -11,7 +11,7 @@
       padding: 20px;
       text-align: center;
     }
-    input[type="text"] {
+    input[type="text"], select, input[type="color"] {
       padding: 10px;
       width: 80%;
       max-width: 400px;
@@ -20,7 +20,7 @@
       border: 2px solid #ff6600;
       background-color: #2a1208;
       color: #fff;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
     button {
       background-color: #ff6600;
@@ -34,7 +34,7 @@
     }
     canvas, img {
       margin-top: 20px;
-      max-width: 300px;
+      max-width: 400px;
     }
     #logoPreview {
       display: block;
@@ -61,16 +61,34 @@
 </head>
 <body>
   <h1>أنشئ رمز QR</h1>
+
   <input type="text" id="text" placeholder="أدخل رابطًا أو نصًا" />
   <br>
-  <p>اختر صورة لوضعها كلوغو في الكيو آر كود:</p>
+
+  <label>اختر الحجم:</label>
+  <select id="qrSize">
+    <option value="512">صغير</option>
+    <option value="768" selected>متوسط</option>
+    <option value="1024">كبير</option>
+  </select>
+  <br>
+
+  <label>لون الرمز:</label>
+  <input type="color" id="darkColor" value="#000000" />
+  <label>لون الخلفية:</label>
+  <input type="color" id="lightColor" value="#ffffff" />
+  <br><br>
+
+  <p>اختر صورة لوضعها كلوغو:</p>
   <label for="logoInput">اختر ملفًا</label>
   <input type="file" id="logoInput" accept="image/*" />
   <img id="logoPreview" src="" alt="شعار QR" style="display:none;" />
   <br>
+
   <button onclick="generateQR()">توليد</button>
   <button onclick="downloadQR()">تنزيل الكود</button>
   <br>
+
   <canvas id="qrcode"></canvas>
 
   <script>
@@ -93,19 +111,31 @@
     function generateQR() {
       const canvas = document.getElementById('qrcode');
       const text = document.getElementById('text').value;
+      const size = parseInt(document.getElementById('qrSize').value);
+      const darkColor = document.getElementById('darkColor').value;
+      const lightColor = document.getElementById('lightColor').value;
+
+      canvas.width = size;
+      canvas.height = size;
+
       QRCode.toCanvas(canvas, text, {
+        width: size,
+        errorCorrectionLevel: 'H',
         color: {
-          dark: "#000000",
-          light: "#ffffff"
+          dark: darkColor,
+          light: lightColor
         }
       }, function (error) {
         if (error) console.error(error);
+        const ctx = canvas.getContext('2d');
         if (logoImage) {
-          const ctx = canvas.getContext('2d');
-          const size = canvas.width * 0.2;
-          const x = (canvas.width - size) / 2;
-          const y = (canvas.height - size) / 2;
-          ctx.drawImage(logoImage, x, y, size, size);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+
+          const logoSize = size * 0.25;
+          const x = (size - logoSize) / 2;
+          const y = (size - logoSize) / 2;
+          ctx.drawImage(logoImage, x, y, logoSize, logoSize);
         }
       });
     }
@@ -113,8 +143,8 @@
     function downloadQR() {
       const canvas = document.getElementById('qrcode');
       const link = document.createElement('a');
-      link.download = 'qrcode.png';
-      link.href = canvas.toDataURL();
+      link.download = 'qrcode_elya.png';
+      link.href = canvas.toDataURL('image/png', 1.0);
       link.click();
     }
   </script>
