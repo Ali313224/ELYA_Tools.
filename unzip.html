@@ -12,19 +12,21 @@
       text-align: center;
       padding: 30px;
     }
-    input[type="file"] {
-      margin: 20px auto;
-      padding: 10px;
+    input[type="file"], button {
+      margin: 10px auto;
+      padding: 10px 20px;
       border-radius: 8px;
-      background-color: #2a1208;
-      border: 2px solid #ff6600;
-      color: #fff;
+      background-color: #ff6600;
+      color: #1a0f0a;
+      font-size: 16px;
+      border: none;
+      cursor: pointer;
     }
     ul {
       list-style: none;
       padding: 0;
-      max-width: 600px;
-      margin: auto;
+      max-width: 700px;
+      margin: 20px auto;
     }
     li {
       background-color: #2a1208;
@@ -33,38 +35,98 @@
       border-radius: 8px;
       border: 1px solid #ff6600;
       word-wrap: break-word;
+      display: flex;
+      flex-direction: column;
+      align-items: start;
+    }
+    .buttons {
+      margin-top: 5px;
+    }
+    .buttons button {
+      margin: 5px 5px 0 0;
+    }
+    .content-box {
+      background-color: #1a0f0a;
+      color: #fff;
+      border: 1px solid #ff6600;
+      margin-top: 10px;
+      padding: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      text-align: left;
+      direction: ltr;
+      width: 100%;
     }
   </style>
 </head>
 <body>
   <h1>فك الضغط عن ملف ZIP</h1>
-  <input type="file" id="zipFile" accept=".zip" />
+  <input type="file" id="zipFileInput" accept=".zip" />
+  <br>
+  <button onclick="extractZip()">فك ضغط الملف</button>
   <ul id="fileList"></ul>
 
   <script>
-    document.getElementById('zipFile').addEventListener('change', function (e) {
-      const file = e.target.files[0];
-      if (!file) return;
+    let selectedZipFile = null;
+
+    document.getElementById('zipFileInput').addEventListener('change', function (e) {
+      selectedZipFile = e.target.files[0];
+    });
+
+    function extractZip() {
+      if (!selectedZipFile) {
+        alert('يرجى اختيار ملف ZIP أولاً');
+        return;
+      }
 
       const zip = new JSZip();
-      zip.loadAsync(file).then(contents => {
+      zip.loadAsync(selectedZipFile).then(contents => {
         const fileList = document.getElementById('fileList');
         fileList.innerHTML = '';
+
         Object.keys(contents.files).forEach(filename => {
-          zip.files[filename].async('string').then(content => {
-            const li = document.createElement('li');
-            li.textContent = `${filename}`;
-            fileList.appendChild(li);
-          }).catch(() => {
-            const li = document.createElement('li');
-            li.textContent = `${filename} (ملف غير نصي)`;
-            fileList.appendChild(li);
-          });
+          const file = contents.files[filename];
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${filename}</strong>`;
+
+          const btns = document.createElement('div');
+          btns.className = "buttons";
+
+          // زر عرض المحتوى
+          const viewBtn = document.createElement('button');
+          viewBtn.textContent = 'عرض المحتوى';
+          viewBtn.onclick = () => {
+            file.async('string').then(text => {
+              const contentBox = document.createElement('div');
+              contentBox.className = 'content-box';
+              contentBox.textContent = text;
+              li.appendChild(contentBox);
+            }).catch(() => alert("لا يمكن عرض هذا الملف كنص."));
+          };
+          btns.appendChild(viewBtn);
+
+          // زر التنزيل
+          const downloadBtn = document.createElement('button');
+          downloadBtn.textContent = 'تنزيل';
+          downloadBtn.onclick = () => {
+            file.async('blob').then(blob => {
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              a.click();
+            });
+          };
+          btns.appendChild(downloadBtn);
+
+          li.appendChild(btns);
+          fileList.appendChild(li);
         });
       }).catch(() => {
         alert('حدث خطأ أثناء قراءة الملف.');
       });
-    });
+    }
   </script>
 </body>
 </html>
