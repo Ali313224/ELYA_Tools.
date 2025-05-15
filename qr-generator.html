@@ -11,7 +11,7 @@
       padding: 20px;
       text-align: center;
     }
-    input {
+    input[type="text"], input[type="file"] {
       padding: 10px;
       width: 80%;
       max-width: 400px;
@@ -30,29 +30,77 @@
       border-radius: 8px;
       font-size: 16px;
       cursor: pointer;
-      margin-bottom: 20px;
+      margin: 10px;
     }
     canvas {
       margin-top: 20px;
+      background-color: white;
+      padding: 10px;
+      border-radius: 8px;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 <body>
   <h1>أنشئ رمز QR</h1>
+
   <input type="text" id="text" placeholder="أدخل رابطًا أو نصًا" />
   <br>
-  <button onclick="generateQR()">توليد</button>
+  <input type="file" id="logoInput" accept="image/*" />
   <br>
-  <canvas id="qrcode"></canvas>
+  <button onclick="generateQR()">توليد</button>
+  <button onclick="downloadQR()">تنزيل الكود</button>
+  <br>
+  <canvas id="qrcode" width="300" height="300"></canvas>
 
   <script>
     function generateQR() {
       const canvas = document.getElementById('qrcode');
-      const text = document.getElementById('text').value;
-      QRCode.toCanvas(canvas, text, { color: { dark: "#ff6600", light: "#1a0f0a" } }, function (error) {
-        if (error) console.error(error);
+      const ctx = canvas.getContext('2d');
+      const text = document.getElementById('text').value.trim();
+      const logoFile = document.getElementById('logoInput').files[0];
+
+      if (!text) {
+        alert("الرجاء إدخال نص أو رابط!");
+        return;
+      }
+
+      QRCode.toCanvas(canvas, text, {
+        color: {
+          dark: "#000000",
+          light: "#ffffff"
+        },
+        width: 300,
+        margin: 1
+      }, function (error) {
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        if (logoFile) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const logo = new Image();
+            logo.src = e.target.result;
+            logo.onload = function () {
+              const size = 60;
+              const x = (canvas.width - size) / 2;
+              const y = (canvas.height - size) / 2;
+              ctx.drawImage(logo, x, y, size, size);
+            };
+          };
+          reader.readAsDataURL(logoFile);
+        }
       });
+    }
+
+    function downloadQR() {
+      const canvas = document.getElementById("qrcode");
+      const link = document.createElement("a");
+      link.download = "qrcode.png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
     }
   </script>
 </body>
