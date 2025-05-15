@@ -18,6 +18,17 @@
       font-size: 48px;
       margin: 20px;
     }
+    input {
+      width: 70px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #ff6600;
+      background-color: #2a1208;
+      color: #fff;
+      font-size: 16px;
+      margin: 5px;
+      text-align: center;
+    }
     button {
       background-color: #ff6600;
       color: #1a0f0a;
@@ -32,39 +43,70 @@
 </head>
 <body>
   <h1>مؤقت التركيز</h1>
-  <div id="timer">25:00</div>
+
+  <div>
+    <input type="number" id="hours" placeholder="ساعات" min="0">
+    <input type="number" id="minutes" placeholder="دقائق" min="0" max="59">
+    <input type="number" id="seconds" placeholder="ثواني" min="0" max="59">
+  </div>
+
+  <div id="timer">00:00:00</div>
+
   <button onclick="startTimer()">ابدأ</button>
+  <button onclick="pauseTimer()">إيقاف مؤقت</button>
   <button onclick="resetTimer()">إعادة</button>
 
   <script>
-    let duration = 25 * 60;
-    let remaining = duration;
-    let interval;
+    let duration = 0;
+    let remaining = 0;
+    let interval = null;
 
     function updateDisplay() {
-      const minutes = Math.floor(remaining / 60).toString().padStart(2, '0');
-      const seconds = (remaining % 60).toString().padStart(2, '0');
-      document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+      const hrs = Math.floor(remaining / 3600).toString().padStart(2, '0');
+      const mins = Math.floor((remaining % 3600) / 60).toString().padStart(2, '0');
+      const secs = (remaining % 60).toString().padStart(2, '0');
+      document.getElementById('timer').innerText = `${hrs}:${mins}:${secs}`;
+    }
+
+    function getInputDuration() {
+      const hours = parseInt(document.getElementById('hours').value) || 0;
+      const minutes = parseInt(document.getElementById('minutes').value) || 0;
+      const seconds = parseInt(document.getElementById('seconds').value) || 0;
+      return (hours * 3600) + (minutes * 60) + seconds;
     }
 
     function startTimer() {
-      if (interval) return;
-      interval = setInterval(() => {
-        if (remaining > 0) {
-          remaining--;
-          updateDisplay();
-        } else {
-          clearInterval(interval);
-          interval = null;
-          alert("انتهى الوقت!");
+      if (!interval) {
+        if (remaining === 0) {
+          duration = getInputDuration();
+          if (duration <= 0) {
+            alert("الرجاء إدخال وقت صالح.");
+            return;
+          }
+          remaining = duration;
         }
-      }, 1000);
+        interval = setInterval(() => {
+          if (remaining > 0) {
+            remaining--;
+            updateDisplay();
+          } else {
+            clearInterval(interval);
+            interval = null;
+            alert("انتهى الوقت!");
+          }
+        }, 1000);
+      }
+    }
+
+    function pauseTimer() {
+      clearInterval(interval);
+      interval = null;
     }
 
     function resetTimer() {
       clearInterval(interval);
       interval = null;
-      remaining = duration;
+      remaining = getInputDuration();
       updateDisplay();
     }
 
