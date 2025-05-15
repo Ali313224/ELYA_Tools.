@@ -11,7 +11,7 @@
       padding: 20px;
       text-align: center;
     }
-    input[type="text"], input[type="file"] {
+    input, button {
       padding: 10px;
       width: 80%;
       max-width: 400px;
@@ -20,23 +20,22 @@
       border: 2px solid #ff6600;
       background-color: #2a1208;
       color: #fff;
-      margin-bottom: 20px;
+      margin: 10px 0;
     }
     button {
       background-color: #ff6600;
       color: #1a0f0a;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-size: 16px;
       cursor: pointer;
-      margin: 10px;
     }
     canvas {
       margin-top: 20px;
-      background-color: white;
-      padding: 10px;
-      border-radius: 8px;
+    }
+    img#logoPreview {
+      margin-top: 10px;
+      max-width: 100px;
+      max-height: 100px;
+      border: 2px solid #ff6600;
+      border-radius: 10px;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
@@ -46,60 +45,63 @@
 
   <input type="text" id="text" placeholder="أدخل رابطًا أو نصًا" />
   <br>
+
   <input type="file" id="logoInput" accept="image/*" />
+  <label style="display:block; margin: 5px 0;">اختر صورة لوضعها كلوغو في الكيو ار كود</label>
+  <img id="logoPreview" style="display: none;" />
+
   <br>
   <button onclick="generateQR()">توليد</button>
-  <button onclick="downloadQR()">تنزيل الكود</button>
   <br>
-  <canvas id="qrcode" width="300" height="300"></canvas>
+  <canvas id="qrcode"></canvas>
+  <br>
+  <button onclick="downloadQR()">تنزيل الكيو آر كصورة</button>
 
   <script>
+    let logoImg = null;
+
+    document.getElementById('logoInput').addEventListener('change', function (e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function () {
+        logoImg = new Image();
+        logoImg.src = reader.result;
+        logoImg.onload = function () {
+          const preview = document.getElementById('logoPreview');
+          preview.src = logoImg.src;
+          preview.style.display = 'block';
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+
     function generateQR() {
       const canvas = document.getElementById('qrcode');
-      const ctx = canvas.getContext('2d');
-      const text = document.getElementById('text').value.trim();
-      const logoFile = document.getElementById('logoInput').files[0];
-
-      if (!text) {
-        alert("الرجاء إدخال نص أو رابط!");
-        return;
-      }
+      const text = document.getElementById('text').value;
 
       QRCode.toCanvas(canvas, text, {
-        color: {
-          dark: "#000000",
-          light: "#ffffff"
-        },
-        width: 300,
-        margin: 1
+        errorCorrectionLevel: 'H',
+        color: { dark: "#000000", light: "#ffffff" },
+        width: 300
       }, function (error) {
-        if (error) {
-          console.error(error);
-          return;
-        }
-
-        if (logoFile) {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const logo = new Image();
-            logo.src = e.target.result;
-            logo.onload = function () {
-              const size = 60;
-              const x = (canvas.width - size) / 2;
-              const y = (canvas.height - size) / 2;
-              ctx.drawImage(logo, x, y, size, size);
-            };
-          };
-          reader.readAsDataURL(logoFile);
+        if (error) console.error(error);
+        else if (logoImg) {
+          const ctx = canvas.getContext('2d');
+          const size = 60;
+          const x = (canvas.width - size) / 2;
+          const y = (canvas.height - size) / 2;
+          ctx.drawImage(logoImg, x, y, size, size);
         }
       });
     }
 
     function downloadQR() {
-      const canvas = document.getElementById("qrcode");
-      const link = document.createElement("a");
-      link.download = "qrcode.png";
-      link.href = canvas.toDataURL("image/png");
+      const canvas = document.getElementById('qrcode');
+      const link = document.createElement('a');
+      link.download = 'qr-code.png';
+      link.href = canvas.toDataURL();
       link.click();
     }
   </script>
