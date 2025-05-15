@@ -1,16 +1,67 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>ضغط الصور</title>
+  <meta charset="UTF-8" />
+  <title>ضغط الصور - ELYA Tools</title>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1a0f0a;
+      color: #ff6600;
+      padding: 20px;
+      text-align: center;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    label, button {
+      background-color: #ff6600;
+      color: #1a0f0a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+      display: inline-block;
+    }
+    img {
+      margin-top: 20px;
+      max-width: 90%;
+      border: 2px solid #ff6600;
+      border-radius: 10px;
+    }
+  </style>
 </head>
 <body>
   <h1>ضغط الصور</h1>
-  <input type="file" id="imageInput" />
+
+  <input type="file" id="imageInput" accept="image/*" onchange="previewImage(event)" />
+  <label for="imageInput">اختر صورة</label>
   <button onclick="compressImage()">ضغط الصورة</button>
-  <img id="outputImage" style="max-width: 100%;" />
+  <button id="downloadBtn" style="display:none;" onclick="downloadImage()">تنزيل الصورة</button>
+
+  <br>
+  <img id="originalImage" alt="الصورة الأصلية" style="display:none;" />
+  <br>
+  <img id="outputImage" alt="الصورة المضغوطة" style="display:none;" />
+
   <script>
+    let compressedBlob = null;
+
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.getElementById('originalImage');
+          img.src = e.target.result;
+          img.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function compressImage() {
       const file = document.getElementById('imageInput').files[0];
       if (file) {
@@ -27,12 +78,25 @@
             canvas.height = img.height * scaleFactor;
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
             canvas.toBlob(function(blob) {
+              compressedBlob = blob;
               const url = URL.createObjectURL(blob);
-              document.getElementById('outputImage').src = url;
+              const outputImage = document.getElementById('outputImage');
+              outputImage.src = url;
+              outputImage.style.display = 'block';
+              document.getElementById('downloadBtn').style.display = 'inline-block';
             }, 'image/jpeg', 0.5);
           };
         };
         reader.readAsDataURL(file);
+      }
+    }
+
+    function downloadImage() {
+      if (compressedBlob) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(compressedBlob);
+        a.download = 'compressed.jpg';
+        a.click();
       }
     }
   </script>
