@@ -11,7 +11,7 @@
       padding: 20px;
       text-align: center;
     }
-    input, button {
+    input[type="text"] {
       padding: 10px;
       width: 80%;
       max-width: 400px;
@@ -20,79 +20,92 @@
       border: 2px solid #ff6600;
       background-color: #2a1208;
       color: #fff;
-      margin: 10px 0;
+      margin-bottom: 20px;
     }
     button {
       background-color: #ff6600;
       color: #1a0f0a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
+      margin: 10px 5px;
     }
-    canvas {
+    canvas, img {
       margin-top: 20px;
+      max-width: 300px;
     }
-    img#logoPreview {
-      margin-top: 10px;
+    #logoPreview {
+      display: block;
+      margin: 10px auto 20px;
       max-width: 100px;
-      max-height: 100px;
       border: 2px solid #ff6600;
-      border-radius: 10px;
+      border-radius: 8px;
+    }
+    #logoInput {
+      display: none;
+    }
+    label[for="logoInput"] {
+      display: inline-block;
+      background-color: #ff6600;
+      color: #1a0f0a;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 10px;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
 <body>
   <h1>أنشئ رمز QR</h1>
-
   <input type="text" id="text" placeholder="أدخل رابطًا أو نصًا" />
   <br>
-
+  <p>اختر صورة لوضعها كلوغو في الكيو آر كود:</p>
+  <label for="logoInput">اختر ملفًا</label>
   <input type="file" id="logoInput" accept="image/*" />
-  <label style="display:block; margin: 5px 0;">اختر صورة لوضعها كلوغو في الكيو ار كود</label>
-  <img id="logoPreview" style="display: none;" />
-
+  <img id="logoPreview" src="" alt="شعار QR" style="display:none;" />
   <br>
   <button onclick="generateQR()">توليد</button>
+  <button onclick="downloadQR()">تنزيل الكود</button>
   <br>
   <canvas id="qrcode"></canvas>
-  <br>
-  <button onclick="downloadQR()">تنزيل الكيو آر كصورة</button>
 
   <script>
-    let logoImg = null;
+    let logoImage = null;
 
     document.getElementById('logoInput').addEventListener('change', function (e) {
       const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function () {
-        logoImg = new Image();
-        logoImg.src = reader.result;
-        logoImg.onload = function () {
-          const preview = document.getElementById('logoPreview');
-          preview.src = logoImg.src;
-          preview.style.display = 'block';
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          logoImage = new Image();
+          logoImage.src = event.target.result;
+          document.getElementById('logoPreview').src = event.target.result;
+          document.getElementById('logoPreview').style.display = 'block';
         };
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      }
     });
 
     function generateQR() {
       const canvas = document.getElementById('qrcode');
       const text = document.getElementById('text').value;
-
       QRCode.toCanvas(canvas, text, {
-        errorCorrectionLevel: 'H',
-        color: { dark: "#000000", light: "#ffffff" },
-        width: 300
+        color: {
+          dark: "#000000",
+          light: "#ffffff"
+        }
       }, function (error) {
         if (error) console.error(error);
-        else if (logoImg) {
+        if (logoImage) {
           const ctx = canvas.getContext('2d');
-          const size = 60;
+          const size = canvas.width * 0.2;
           const x = (canvas.width - size) / 2;
           const y = (canvas.height - size) / 2;
-          ctx.drawImage(logoImg, x, y, size, size);
+          ctx.drawImage(logoImage, x, y, size, size);
         }
       });
     }
@@ -100,7 +113,7 @@
     function downloadQR() {
       const canvas = document.getElementById('qrcode');
       const link = document.createElement('a');
-      link.download = 'qr-code.png';
+      link.download = 'qrcode.png';
       link.href = canvas.toDataURL();
       link.click();
     }
