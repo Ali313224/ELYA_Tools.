@@ -1,34 +1,109 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>حوّل صورك إلى PDF</title>
+  <meta charset="UTF-8" />
+  <title>حوّل صورك إلى PDF - ELYA Tools</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1a0f0a;
+      color: #ff6600;
+      padding: 20px;
+      text-align: center;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    label, button {
+      background-color: #ff6600;
+      color: #1a0f0a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+      display: inline-block;
+    }
+    .preview-img {
+      max-width: 200px;
+      margin: 10px;
+      border: 2px solid #ff6600;
+      border-radius: 10px;
+    }
+    #previewContainer {
+      margin-top: 20px;
+    }
+  </style>
 </head>
 <body>
   <h1>حوّل صورك إلى PDF</h1>
-  <input type="file" id="imageInput" multiple />
+
+  <input type="file" id="imageInput" accept="image/*" multiple onchange="previewImages(event)" />
+  <label for="imageInput">تحميل الصور</label>
+
   <button onclick="convertToPDF()">تحويل إلى PDF</button>
+  <button id="downloadBtn" style="display:none;" onclick="downloadPDF()">تنزيل الملف</button>
+
+  <div id="previewContainer"></div>
+
   <script>
+    let pdfInstance = null;
+
+    function previewImages(event) {
+      const container = document.getElementById('previewContainer');
+      container.innerHTML = '';
+      const files = event.target.files;
+      for (let file of files) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'preview-img';
+          container.appendChild(img);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
     function convertToPDF() {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF();
       const files = document.getElementById('imageInput').files;
-      if (files.length > 0) {
-        Array.from(files).forEach((file, index) => {
-          const reader = new FileReader();
-          reader.onload = function() {
-            const img = new Image();
-            img.src = reader.result;
-            img.onload = function() {
-              if (index > 0) pdf.addPage();
-              pdf.addImage(img, 'JPEG', 10, 10, 180, 160);
-              if (index === files.length - 1) pdf.save('images.pdf');
-            };
+
+      if (files.length === 0) return alert('الرجاء تحميل صورة واحدة على الأقل');
+
+      let loadedImages = 0;
+      const totalImages = files.length;
+
+      Array.from(files).forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = function() {
+          const img = new Image();
+          img.src = reader.result;
+          img.onload = function() {
+            const width = pdf.internal.pageSize.getWidth() - 20;
+            const height = (img.height * width) / img.width;
+
+            if (index > 0) pdf.addPage();
+            pdf.addImage(img, 'JPEG', 10, 10, width, height);
+
+            loadedImages++;
+            if (loadedImages === totalImages) {
+              pdfInstance = pdf;
+              document.getElementById('downloadBtn').style.display = 'inline-block';
+              alert('تم إنشاء ملف PDF، يمكنك تنزيله الآن.');
+            }
           };
-          reader.readAsDataURL(file);
-        });
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function downloadPDF() {
+      if (pdfInstance) {
+        pdfInstance.save('images.pdf');
       }
     }
   </script>
