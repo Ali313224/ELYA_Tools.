@@ -1,24 +1,72 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>تحويل الصوت إلى نص</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #121212;
+      color: white;
+      text-align: center;
+      padding: 50px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1565c0;
+    }
+    #transcript {
+      margin-top: 20px;
+      display: inline-block;
+      background: #333;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+    }
+  </style>
 </head>
 <body>
   <h1>تحويل الصوت إلى نص</h1>
   <button onclick="startRecording()">ابدأ التسجيل</button>
-  <p>النص: <span id="transcript"></span></p>
+  <p>النص: <span id="transcript">...</span></p>
+
   <script>
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'ar-SA';
-    function startRecording() {
-      recognition.start();
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('المتصفح لا يدعم تحويل الصوت إلى نص');
+    } else {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'ar-SA';
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        document.getElementById('transcript').innerText = 'جاري الاستماع...';
+      };
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('transcript').innerText = transcript;
+      };
+
+      recognition.onerror = function(event) {
+        document.getElementById('transcript').innerText = 'حدث خطأ: ' + event.error;
+      };
+
+      recognition.onend = () => {
+        console.log('انتهى التسجيل');
+      };
+
+      function startRecording() {
+        recognition.start();
+      }
     }
-    recognition.onresult = function(event) {
-      const transcript = event.results[0][0].transcript;
-      document.getElementById('transcript').innerText = transcript;
-    };
   </script>
 </body>
 </html>
