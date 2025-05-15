@@ -1,71 +1,90 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>تحويل الصوت إلى نص</title>
+  <meta charset="UTF-8" />
+  <title>تحويل الصوت إلى نص - ELYA Tools</title>
   <style>
     body {
-      font-family: 'Arial', sans-serif;
-      background-color: #121212;
-      color: white;
+      font-family: 'Cairo', sans-serif;
+      background-color: #1a0f0a;
+      color: #ff6600;
+      padding: 20px;
       text-align: center;
-      padding: 50px;
     }
     button {
-      padding: 10px 20px;
-      font-size: 18px;
-      background-color: #1e88e5;
-      color: white;
+      background-color: #ff6600;
+      color: #1a0f0a;
       border: none;
+      padding: 10px 20px;
       border-radius: 8px;
+      font-size: 16px;
       cursor: pointer;
+      margin: 10px;
     }
-    button:hover {
-      background-color: #1565c0;
-    }
-    #transcript {
-      margin-top: 20px;
-      display: inline-block;
-      background: #333;
-      padding: 10px;
+    #transcriptBox {
+      background-color: #2a1208;
+      border: 2px solid #ff6600;
       border-radius: 10px;
-      max-width: 80%;
+      padding: 15px;
+      margin-top: 20px;
+      color: #fff;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      min-height: 50px;
+      word-break: break-word;
     }
   </style>
 </head>
 <body>
   <h1>تحويل الصوت إلى نص</h1>
+
   <button onclick="startRecording()">ابدأ التسجيل</button>
-  <p>النص: <span id="transcript">...</span></p>
+  <button onclick="stopRecording()">أوقف التسجيل</button>
+  <button onclick="copyText()">نسخ النص</button>
+
+  <div id="transcriptBox">النص المحوّل سيظهر هنا...</div>
 
   <script>
+    let recognition;
     if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
       alert('المتصفح لا يدعم تحويل الصوت إلى نص');
     } else {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
       recognition.lang = 'ar-SA';
       recognition.interimResults = false;
 
       recognition.onstart = () => {
-        document.getElementById('transcript').innerText = 'جاري الاستماع...';
+        document.getElementById('transcriptBox').innerText = 'جاري الاستماع...';
       };
 
       recognition.onresult = function(event) {
         const transcript = event.results[0][0].transcript;
-        document.getElementById('transcript').innerText = transcript;
+        document.getElementById('transcriptBox').innerText = transcript;
       };
 
       recognition.onerror = function(event) {
-        document.getElementById('transcript').innerText = 'حدث خطأ: ' + event.error;
+        document.getElementById('transcriptBox').innerText = 'حدث خطأ: ' + event.error;
       };
 
       recognition.onend = () => {
         console.log('انتهى التسجيل');
       };
+    }
 
-      function startRecording() {
-        recognition.start();
-      }
+    function startRecording() {
+      if (recognition) recognition.start();
+    }
+
+    function stopRecording() {
+      if (recognition) recognition.stop();
+    }
+
+    function copyText() {
+      const text = document.getElementById('transcriptBox').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('تم نسخ النص!');
+      });
     }
   </script>
 </body>
