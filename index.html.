@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>ضغط الملفات إلى ZIP - ELYA Tools</title>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #1a0f0a;
+      color: #ff6600;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    h1 {
+      margin-bottom: 30px;
+    }
+    #fileInput {
+      display: none;
+    }
+    label[for="fileInput"] {
+      background-color: #ff6600;
+      color: #1a0f0a;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    #fileName {
+      margin: 10px 0 20px;
+      font-size: 16px;
+      color: #ffffff;
+    }
+    button {
+      background-color: #ff6600;
+      color: #1a0f0a;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ضغط الملفات إلى ZIP</h1>
+
+  <label for="fileInput">اختر ملفًا</label>
+  <input type="file" id="fileInput" multiple />
+  <div id="fileName"></div>
+
+  <button onclick="compressFiles()">اضغط الملف</button>
+  <button id="downloadBtn" style="display:none;" onclick="downloadZip()">تنزيل ملف ZIP</button>
+
+  <script>
+    let selectedFiles = [];
+    let zipBlob = null;
+
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      selectedFiles = Array.from(e.target.files);
+      const fileNames = selectedFiles.map(file => file.name).join(', ');
+      document.getElementById('fileName').textContent = fileNames ? `الملفات المحددة: ${fileNames}` : '';
+      document.getElementById('downloadBtn').style.display = "none";
+    });
+
+    function compressFiles() {
+      if (selectedFiles.length === 0) {
+        alert("يرجى اختيار ملفات أولًا.");
+        return;
+      }
+
+      const zip = new JSZip();
+      selectedFiles.forEach(file => {
+        zip.file(file.name, file);
+      });
+
+      zip.generateAsync({ type: "blob" })
+        .then(function (blob) {
+          zipBlob = blob;
+          document.getElementById('downloadBtn').style.display = "inline-block";
+          alert("تم ضغط الملفات بنجاح، يمكنك الآن تنزيل ملف ZIP.");
+        });
+    }
+
+    function downloadZip() {
+      if (!zipBlob) return;
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = "elya_compressed.zip";
+      link.click();
+    }
+  </script>
+</body>
+</html>
